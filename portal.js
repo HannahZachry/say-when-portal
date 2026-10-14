@@ -1,21 +1,3 @@
-/*
- * Say When portal script — Phase 1
- * Reads the token after "#", asks get-portal which state to show, and handles
- * the "Lost your link?" form.
- *
- * Webflow setup this script expects:
- *   Sections with data-state="loading" | "invalid" | "unpaid" | "app"
- *     (every one except "loading" starts with the is-hidden combo class)
- *   Optional: any element with data-client="name" gets the client's first name
- *   Lost-link form: a Webflow Form Block whose <form> has data-portal-form="lost-link",
- *     with an email input named "email"
- *
- * Add to the /portal page settings, Before </body> tag:
- *   <script src="(script URL)"
- *           data-functions-url="https://YOUR-PROJECT-REF.supabase.co/functions/v1"
- *           defer></script>
- * Pasting the script inline also works: put data-functions-url on the inline <script> tag.
- */
 (function () {
   "use strict";
 
@@ -85,9 +67,6 @@
         showState("error");
       });
   }
-
-  // "Lost your link?" form. Listening on document in the capture phase runs before
-  // Webflow's own form handler, so Webflow never submits it to its form inbox.
   document.addEventListener(
     "submit",
     function (event) {
