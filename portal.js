@@ -245,7 +245,12 @@
     saveDirty()
       .then(function (ok) {
         if (!ok) throw new Error("save failed");
-        return callFunction("save-answers", { token: portal.token, finish: true, qa: toMarkdown(walk()) });
+        return pdfBase64().catch(function () { return ""; });
+      })
+      .then(function (pdf) {
+        var body = { token: portal.token, finish: true, qa: toMarkdown(walk()) };
+        if (pdf) body.pdf = pdf;
+        return callFunction("save-answers", body);
       })
       .then(function (r) {
         setStatus("Sent " + fmt(r.submittedAt) + ". Thank you!");
@@ -364,6 +369,26 @@
     }));
   }
 
+  function pdfOptions(filename, quality) {
+    return {
+      margin: [0.5, 0.5, 0.6, 0.5],
+      filename: filename,
+      image: { type: "jpeg", quality: quality },
+      html2canvas: { scale: 2, useCORS: true, backgroundColor: "#ffffff" },
+      jsPDF: { unit: "in", format: "letter", orientation: "portrait" },
+      pagebreak: { mode: ["css"], avoid: [".qa"] },
+    };
+  }
+  function pdfBase64() {
+    return loadPdfLib()
+      .then(function () {
+        return window.html2pdf().set(pdfOptions("workbook.pdf", 0.85)).from(pdfDoc()).outputPdf("datauristring");
+      })
+      .then(function (uri) {
+        return String(uri).split("base64,")[1] || "";
+      });
+  }
+
   document.addEventListener("click", function (e) {
     var btn = e.target.closest && e.target.closest("[data-wb-download]");
     if (!btn) return;
@@ -375,14 +400,7 @@
     loadPdfLib()
       .then(function () {
         var slug = (((portal.client && portal.client.name) || "client").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, ""));
-        return window.html2pdf().set({
-          margin: [0.5, 0.5, 0.6, 0.5],
-          filename: "Brand-Foundations-" + slug + ".pdf",
-          image: { type: "jpeg", quality: 0.95 },
-          html2canvas: { scale: 2, useCORS: true, backgroundColor: "#ffffff" },
-          jsPDF: { unit: "in", format: "letter", orientation: "portrait" },
-          pagebreak: { mode: ["css"], avoid: [".qa"] },
-        }).from(pdfDoc()).save();
+        return window.html2pdf().set(pdfOptions("Brand-Foundations-" + slug + ".pdf", 0.95)).from(pdfDoc()).save();
       })
       .catch(function () {
         alert("Sorry, the PDF could not be created. Please try again, or use a different browser.");
