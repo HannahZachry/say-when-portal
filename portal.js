@@ -689,7 +689,10 @@
     if (webItem && forms.indexOf("website") < 0) webItem.classList.add(HIDDEN);
 
     ORDER = Object.keys(F);
-    ORDER.forEach(function (id) { engine(F[id]); });
+    portal.forms = F;
+    ORDER.forEach(function (id) {
+      try { engine(F[id]); } catch (err) { console.error("Say When portal: form " + id, err); }
+    });
     var firstId = forms.indexOf("workbook") > -1 ? "workbook" : forms[0];
     if (firstId) route(firstId);
   }
