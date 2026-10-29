@@ -659,9 +659,15 @@
       lh.className = "portal_style-h1 " + HIDDEN;
       lh.textContent = "Logo Options";
       host.insertBefore(lh, logo);
+      var lw = document.createElement("div");
+      lw.className = "layout_app-content " + HIDDEN;
+      lw.innerHTML = '<div class="layout_app-grid"><div class="layout_foundations-wrap"></div></div>';
+      host.insertBefore(lw, logo);
+      lw.querySelector(".layout_foundations-wrap").appendChild(logo);
+      logo.classList.remove(HIDDEN);
       lh.setAttribute("data-panel", "logos");
-      logo.setAttribute("data-panel", "logos");
-      P.logos = [lh, logo];
+      lw.setAttribute("data-panel", "logos");
+      P.logos = [lh, lw];
     }
 
     if (forms.indexOf("workbook") > -1) {
