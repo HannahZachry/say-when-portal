@@ -271,6 +271,10 @@
     });
   }
 
+  function scaleLabels(l, r) {
+    return [l, "Somewhat " + l, "Neither " + l + " or " + r, "Somewhat " + r, r];
+  }
+
   function walk() {
     var out = [];
     sections().forEach(function (sec) {
@@ -281,8 +285,9 @@
         if (chosen) out.push({ t: "a", x: chosen.join(", ") });
         chosen = null;
       }
-      sec.querySelectorAll(".portal_style-h3, .portal_style-h4, .form_label, input, textarea, select").forEach(function (el) {
+      sec.querySelectorAll(".portal_style-h3, .portal_style-h4, .form_label, .portal_style-paragraph, .scale-row, input, textarea, select").forEach(function (el) {
         if (el.matches("input, textarea, select")) {
+          if (el.closest(".scale-row")) return;
           var type = (el.type || "").toLowerCase();
           if (type === "hidden" || type === "submit" || type === "button") return;
           if (type === "checkbox") {
@@ -301,14 +306,25 @@
           return;
         }
         flush();
+        if (el.classList.contains("scale-row")) {
+          var l = txt(el.querySelector(".scale-label.is-left")), r = txt(el.querySelector(".scale-label.is-right"));
+          var radios = Array.prototype.slice.call(el.querySelectorAll("input[type=radio]"));
+          var at = radios.findIndex(function (i) { return i.checked; });
+          out.push({ t: "q", x: l + " / " + r });
+          out.push({ t: "a", x: at < 0 ? "" : scaleLabels(l, r)[at] });
+          return;
+        }
         if (el.classList.contains("helper")) return;
         var text = txt(el);
         if (!text) return;
-        out.push({ t: el.classList.contains("portal_style-h3") ? "h3" : el.classList.contains("portal_style-h4") ? "h4" : "q", x: text });
+        var para = el.classList.contains("portal_style-paragraph");
+        out.push({ t: el.classList.contains("portal_style-h3") ? "h3" : el.classList.contains("portal_style-h4") ? "h4" : "q", x: text, p: para });
       });
       flush();
     });
-    return out;
+    return out.filter(function (it, i) {
+      return !it.p || (out[i + 1] && out[i + 1].t === "a");
+    });
   }
 
   function toMarkdown(items) {
@@ -329,7 +345,8 @@
       ".p{width:720px;font-family:Uniformrnd,Helvetica,Arial,sans-serif;color:" + INK + ";background:#fff}" +
       ".p h1{font-size:46px;line-height:1;margin:0 0 10px;font-weight:800}" +
       ".p h2{font-size:22px;margin:0 0 6px;padding-bottom:6px;border-bottom:2px solid " + INK + "}" +
-      ".p h3{font-size:15px;margin:18px 0 4px}.p h4{font-size:13px;margin:14px 0 4px;text-transform:uppercase}" +
+      ".p h3{font-size:17px;font-weight:700;margin:30px 0 6px}.p h4{font-size:13px;font-weight:700;margin:18px 0 4px;text-transform:uppercase}" +
+      ".p .intro{font-size:13px;line-height:1.45;margin:0 0 8px}" +
       ".p .sub{font-size:13px;margin:0 0 14px}" +
       ".p .q{font-size:13px;font-weight:700;margin:14px 0 5px}" +
       ".p .a{font-size:13px;line-height:1.45;white-space:pre-wrap;border:1.5px solid " + INK + ";border-radius:8px;padding:8px 10px;min-height:18px}" +
@@ -341,16 +358,26 @@
       new Date().toLocaleDateString(undefined, { year: "numeric", month: "long", day: "numeric" }) + "</p>";
     var first = true;
     var items = walk();
+    var pending = null;
+    function intro() {
+      if (pending !== null) h += '<p class="intro">' + esc(pending) + "</p>";
+      pending = null;
+    }
     for (var i = 0; i < items.length; i++) {
       var it = items[i];
       if (it.t === "h2") {
+        intro();
         h += (first ? "" : '<div class="pdf-break"></div>') + "<h2>" + esc(it.x) + "</h2>";
         first = false;
-      } else if (it.t === "h3") h += "<h3>" + esc(it.x) + "</h3>";
-      else if (it.t === "h4") h += "<h4>" + esc(it.x) + "</h4>";
-      else if (it.t === "q") h += '<div class="qa"><div class="q">' + esc(it.x) + "</div>";
-      else h += '<div class="a">' + (esc(it.x) || "&nbsp;") + "</div></div>";
+      } else if (it.t === "h3") { intro(); h += "<h3>" + esc(it.x) + "</h3>"; }
+      else if (it.t === "h4") { intro(); h += "<h4>" + esc(it.x) + "</h4>"; }
+      else if (it.t === "q") { intro(); pending = it.x; }
+      else {
+        h += '<div class="qa">' + (pending !== null ? '<div class="q">' + esc(pending) + "</div>" : "") + '<div class="a">' + (esc(it.x) || "&nbsp;") + "</div></div>";
+        pending = null;
+      }
     }
+    intro();
     h += "</div>";
     var root = document.createElement("div");
     root.innerHTML = h;
