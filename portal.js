@@ -668,6 +668,14 @@
       lh.setAttribute("data-panel", "logos");
       lw.setAttribute("data-panel", "logos");
       P.logos = [lh, lw];
+      var lc = logo.querySelector(".data-section-content");
+      if (lc) {
+        var nw = document.createElement("div");
+        nw.setAttribute("data-portal-form", "logos");
+        nw.innerHTML = '<div class="data-step-question" data-logo-notes><div class="form_label">Add any thoughts, comments, or hesitations here.</div><textarea class="form_input is-text-area w-input" maxlength="5000" id="logo-notes" name="logo-notes" data-name="logo-notes" autocorrect="on" spellcheck="true"></textarea><div data-save-status class="form_label helper"></div></div>';
+        lc.appendChild(nw);
+        F.logos = { id: "logos", title: "Logo Options", root: logo, snap: {}, quiet: true, update: function () {}, sections: [{ el: nw, id: "logo-notes" }] };
+      }
     }
 
     if (forms.indexOf("workbook") > -1) {
@@ -695,6 +703,7 @@
     ORDER = Object.keys(F);
     portal.forms = F;
     ORDER.forEach(function (id) {
+      if (F[id].quiet) return;
       try { engine(F[id]); } catch (err) { console.error("Say When portal: form " + id, err); }
     });
     var firstId = forms.indexOf("workbook") > -1 ? "workbook" : forms[0];
@@ -709,6 +718,7 @@
       var f = F[id];
       populate(f, portal.answers);
       f.update();
+      if (f.quiet) return;
       var meta = portal.answers[metaKey(f)];
       if (meta && meta.submittedAt) setStatus(f, "Sent " + fmt(meta.submittedAt) + ". You can still update your answers.");
       else if (d.lastSaved) setStatus(f, "Last saved " + fmt(d.lastSaved));
