@@ -628,8 +628,8 @@
       item = tpl.cloneNode(true);
       item.setAttribute("data-tab", id);
       item.classList.remove("is-active");
-      after.parentNode.insertBefore(item, after.nextSibling);
     }
+    after.parentNode.insertBefore(item, after.nextSibling);
     var t = item.querySelector(".portal_style-nav-item");
     var s = item.querySelector(".portal_style-paragraph");
     if (t) t.textContent = cfg.title;
@@ -651,19 +651,17 @@
     var host = content && content.parentNode;
     if (!host) return;
 
-    var wrap = content.querySelector(".layout_foundations-wrap");
-    var logo = wrap && [].slice.call(wrap.children).filter(function (el) {
+    var logo = [].slice.call(host.children).filter(function (el) {
       return el.classList.contains("data-section") && !el.hasAttribute("data-section") && !el.querySelector("[data-portal-form]");
     })[0];
     if (logo && (d.logo_options || []).length) {
-      var lp = document.createElement("div");
-      lp.className = HIDDEN;
-      lp.setAttribute("data-panel", "logos");
-      lp.innerHTML = '<h2 class="portal_style-h1">Logo Options</h2><div class="layout_app-content"><div class="layout_app-grid"><div class="layout_foundations-wrap"></div></div></div>';
-      lp.querySelector(".layout_foundations-wrap").appendChild(logo);
-      logo.classList.remove(HIDDEN);
-      host.appendChild(lp);
-      P.logos = [lp];
+      var lh = document.createElement("h2");
+      lh.className = "portal_style-h1 " + HIDDEN;
+      lh.textContent = "Logo Options";
+      host.insertBefore(lh, logo);
+      lh.setAttribute("data-panel", "logos");
+      logo.setAttribute("data-panel", "logos");
+      P.logos = [lh, logo];
     }
 
     if (forms.indexOf("workbook") > -1) {
