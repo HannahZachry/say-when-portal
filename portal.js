@@ -653,7 +653,7 @@
 
     var wrap = content.querySelector(".layout_foundations-wrap");
     var logo = wrap && [].slice.call(wrap.children).filter(function (el) {
-      return el.classList.contains("data-section") && !el.hasAttribute("data-section");
+      return el.classList.contains("data-section") && !el.hasAttribute("data-section") && !el.querySelector("[data-portal-form]");
     })[0];
     if (logo && (d.logo_options || []).length) {
       var lp = document.createElement("div");
