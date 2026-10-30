@@ -681,7 +681,7 @@
         var choiceP = Promise.resolve();
         var picked = function () { var r = list.querySelector("input:checked"); return r ? r.value : ""; };
         list.innerHTML = "";
-        list.style.cssText = "display:flex;flex-direction:column;gap:4rem";
+        list.style.cssText = "display:grid;grid-template-columns:repeat(auto-fill,minmax(min(400px,100%),400px));gap:4rem;align-items:start";
         opts.forEach(function (x, i) {
           var name = x.label || "Option " + (i + 1);
           var kw = String(x.keywords || "").split(",").map(function (k) { return k.trim(); }).filter(Boolean).slice(0, 3);
