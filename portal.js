@@ -681,6 +681,7 @@
         var choiceP = Promise.resolve();
         var picked = function () { var r = list.querySelector("input:checked"); return r ? r.value : ""; };
         list.innerHTML = "";
+        list.style.cssText = "display:flex;flex-direction:column;gap:4rem";
         opts.forEach(function (x, i) {
           var name = x.label || "Option " + (i + 1);
           var kw = String(x.keywords || "").split(",").map(function (k) { return k.trim(); }).filter(Boolean).slice(0, 3);
@@ -697,6 +698,7 @@
         });
         var nw = document.createElement("div");
         nw.setAttribute("data-portal-form", "logos");
+        nw.style.marginTop = "4rem";
         nw.innerHTML = '<div class="data-step-question"><div class="form_label">Add any thoughts, comments, or hesitations here.</div><textarea class="form_input is-text-area w-input" maxlength="5000" id="logo-notes" name="logo-notes" data-name="logo-notes" autocorrect="on" spellcheck="true"></textarea></div>' +
           SPACER + '<div class="flex-horizontal-1rem"><a role="button" data-wb-finish href="#" class="button w-button">Submit</a><a role="button" data-logo-clear href="#" class="button is-secondary">Clear selection</a></div><div data-save-status class="portal_style-paragraph"></div>';
         lc.appendChild(nw);
