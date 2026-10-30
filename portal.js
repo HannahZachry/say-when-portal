@@ -758,13 +758,16 @@
       rel.setAttribute("data-panel", "requests");
       var sec = function (h, body) { return '<div class="data-section"><div class="data-section-header"><h2 class="portal_style-h2">' + h + '</h2></div><div class="data-section-content">' + body + "</div></div>"; };
       rel.innerHTML = '<h2 class="portal_style-h1">Design Requests</h2><div class="layout_app-content"><div class="layout_app-grid"><div class="layout_foundations-wrap">' +
+        (rq.plan
+          ? sec("Your Plan", '<div class="portal_style-paragraph"><strong>' + esc(rq.plan) + "</strong>" + (rq.since ? " · Subscribed " + esc(fmt(rq.since)) : "") + '</div><div class="portal_style-paragraph">Submit one request at a time. Each takes 3 to 8 business days to produce. Your plan covers the full period you\'ve paid for, even if you cancel.</div>' + SPACER + '<a class="button w-button" href="https://billing.stripe.com/p/login/28E8wO0UG9ml9UF9045kk00" target="_blank" rel="noopener">Manage subscription</a>') + SPACER
+          : "") +
         sec("Submit a Request", rq.form_url
           ? '<iframe class="clickup-embed clickup-dynamic-height" src="' + esc(rq.form_url) + '" width="100%" height="900" style="border:0;background:transparent" title="Design request form"></iframe>'
           : '<div class="portal_style-paragraph">The request form is coming soon.</div>') +
         SPACER +
-        sec("Delivered Files", rq.drive_url
-          ? '<div class="portal_style-paragraph">A copy of everything delivered lives in your shared folder.</div>' + SPACER + '<a class="button w-button" href="' + esc(rq.drive_url) + '" target="_blank" rel="noopener">Open shared folder</a>'
-          : '<div class="portal_style-paragraph">Your shared folder will be linked here once your first request is delivered.</div>') +
+        sec("Shared Drive", rq.drive_url
+          ? '<div class="portal_style-paragraph">Everything we deliver lives in your shared drive.</div>' + SPACER + '<a class="button w-button" href="' + esc(rq.drive_url) + '" target="_blank" rel="noopener">Open shared drive</a>'
+          : '<div class="portal_style-paragraph">Your shared drive will be linked here once your first request is delivered.</div>') +
         "</div></div></div>";
       host.appendChild(rel);
       P.requests = [rel];
