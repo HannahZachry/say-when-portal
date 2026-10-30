@@ -751,6 +751,30 @@
       F[id] = { id: id, title: cfg.title, root: el, snap: {} };
       if (prev) prev = hubItem(id, cfg, prev);
     });
+    if (d.requests) {
+      var rq = d.requests;
+      var rel = document.createElement("div");
+      rel.className = HIDDEN;
+      rel.setAttribute("data-panel", "requests");
+      var sec = function (h, body) { return '<div class="data-section"><div class="data-section-header"><h2 class="portal_style-h2">' + h + '</h2></div><div class="data-section-content">' + body + "</div></div>"; };
+      rel.innerHTML = '<h2 class="portal_style-h1">Design Requests</h2><div class="layout_app-content"><div class="layout_app-grid"><div class="layout_foundations-wrap">' +
+        sec("Submit a Request", rq.form_url
+          ? '<iframe class="clickup-embed clickup-dynamic-height" src="' + esc(rq.form_url) + '" width="100%" height="900" style="border:0;background:transparent" title="Design request form"></iframe>'
+          : '<div class="portal_style-paragraph">The request form is coming soon.</div>') +
+        SPACER +
+        sec("Delivered Files", rq.drive_url
+          ? '<div class="portal_style-paragraph">A copy of everything delivered lives in your shared folder.</div>' + SPACER + '<a class="button w-button" href="' + esc(rq.drive_url) + '" target="_blank" rel="noopener">Open shared folder</a>'
+          : '<div class="portal_style-paragraph">Your shared folder will be linked here once your first request is delivered.</div>') +
+        "</div></div></div>";
+      host.appendChild(rel);
+      P.requests = [rel];
+      if (rq.form_url) {
+        var cs = document.createElement("script");
+        cs.src = "https://app-cdn.clickup.com/assets/js/forms-embed/v1.js";
+        document.body.appendChild(cs);
+      }
+      if (prev) prev = hubItem("requests", { title: "Design Requests", sub: "Submit" }, prev);
+    }
     var wbItem = document.querySelector('.portal_hub-item[data-tab="workbook"]');
     if (wbItem) wbItem.classList.toggle(HIDDEN, forms.indexOf("workbook") < 0);
     var webItem = document.querySelector('[data-tab="website"]');
@@ -762,7 +786,7 @@
       if (F[id].quiet) return;
       try { engine(F[id]); } catch (err) { console.error("Say When portal: form " + id, err); }
     });
-    var firstId = forms.indexOf("workbook") > -1 ? "workbook" : forms[0];
+    var firstId = forms.indexOf("workbook") > -1 ? "workbook" : forms[0] || (d.requests ? "requests" : "");
     if (firstId) route(firstId);
   }
 
