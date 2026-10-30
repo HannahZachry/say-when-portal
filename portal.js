@@ -290,6 +290,7 @@
   var built = false;
 
   function setStatus(f, msg) {
+    if (f.quiet && /^(Saving|Saved|Last saved)/.test(msg)) return;
     f.root.querySelectorAll("[data-save-status]").forEach(function (el) { el.textContent = msg; });
   }
   function fmt(iso) {
@@ -399,17 +400,20 @@
   window.addEventListener("pagehide", function () { saveDirty(true); });
   window.addEventListener("online", function () { saveDirty(); });
 
+  function itemsOf(f) { return f.items ? f.items() : walk(f); }
+
   function finishForm(f) {
     if (finishing[f.id]) return;
     finishing[f.id] = true;
     setStatus(f, "Sending...");
-    saveDirty()
+    (f.wait ? f.wait() : Promise.resolve())
+      .then(function () { return saveDirty(); })
       .then(function (ok) {
         if (!ok) throw new Error("save failed");
         return pdfBase64(f).catch(function () { return ""; });
       })
       .then(function (pdf) {
-        var body = { token: portal.token, form: f.id, finish: true, qa: toMarkdown(walk(f)) };
+        var body = { token: portal.token, form: f.id, finish: true, qa: toMarkdown(itemsOf(f)) };
         if (pdf) body.pdf = pdf;
         return callFunction("save-answers", body);
       })
@@ -669,13 +673,63 @@
       lw.setAttribute("data-panel", "logos");
       P.logos = [lh, lw];
       var lc = logo.querySelector(".data-section-content");
-      if (lc) {
+      var list = logo.querySelector("[data-logo-list]");
+      var stEl = logo.querySelector("[data-logo-status]");
+      if (stEl) stEl.remove();
+      if (lc && list) {
+        var opts = d.logo_options;
+        var choiceP = Promise.resolve();
+        var picked = function () { var r = list.querySelector("input:checked"); return r ? r.value : ""; };
+        list.innerHTML = "";
+        opts.forEach(function (x, i) {
+          var name = x.label || "Option " + (i + 1);
+          var kw = String(x.keywords || "").split(",").map(function (k) { return k.trim(); }).filter(Boolean).slice(0, 3);
+          var card = document.createElement("div");
+          card.className = "logo-option_card flex-vertical-1-rem";
+          card.innerHTML = '<img class="logo-option_image" alt="' + esc(name) + '" src="' + esc(x.image_url) + '">' +
+            '<label class="foundations_checkbox-field"><input type="radio" name="logo" class="radio-button" value="' + esc(x.id) + '"' + (x.id === d.logo_choice ? " checked" : "") + '><span class="foundations_checkbox-label">' + esc(name) + "</span></label>" +
+            (x.rationale ? '<div class="portal_style-paragraph">' + esc(x.rationale) + "</div>" : "") +
+            (kw.length ? '<div class="portal_style-paragraph"><strong>Keywords:</strong> ' + esc(kw.join(", ")) + "</div>" : "");
+          card.querySelector("input").addEventListener("change", function () {
+            choiceP = callFunction("save-logo-choice", { token: portal.token, option_id: x.id }).catch(function () {});
+          });
+          list.appendChild(card);
+        });
         var nw = document.createElement("div");
         nw.setAttribute("data-portal-form", "logos");
-        nw.innerHTML = '<div class="data-step-question" data-logo-notes><div class="form_label">Add any thoughts, comments, or hesitations here.</div><textarea class="form_input is-text-area w-input" maxlength="5000" id="logo-notes" name="logo-notes" data-name="logo-notes" autocorrect="on" spellcheck="true"></textarea><div data-save-status class="form_label helper"></div></div>';
+        nw.innerHTML = '<div class="data-step-question"><div class="form_label">Add any thoughts, comments, or hesitations here.</div><textarea class="form_input is-text-area w-input" maxlength="5000" id="logo-notes" name="logo-notes" data-name="logo-notes" autocorrect="on" spellcheck="true"></textarea></div>' +
+          SPACER + '<div class="flex-horizontal-1rem"><a role="button" data-wb-finish href="#" class="button w-button">Submit</a><a role="button" data-logo-clear href="#" class="button is-secondary">Clear selection</a></div><div data-save-status class="portal_style-paragraph"></div>';
         lc.appendChild(nw);
-        F.logos = { id: "logos", title: "Logo Options", root: logo, snap: {}, quiet: true, update: function () {}, sections: [{ el: nw, id: "logo-notes" }] };
+        nw.querySelector("[data-logo-clear]").addEventListener("click", function (e) {
+          e.preventDefault();
+          list.querySelectorAll("input").forEach(function (r) { r.checked = false; });
+          choiceP = callFunction("save-logo-choice", { token: portal.token, clear: true }).catch(function () {});
+        });
+        F.logos = {
+          id: "logos", title: "Logo Options", root: logo, snap: {}, quiet: true, update: function () {},
+          sections: [{ el: nw, id: "logo-notes" }],
+          wait: function () { return choiceP; },
+          firstInvalid: function () {
+            if (picked()) return false;
+            setStatus(F.logos, "Please choose a logo before submitting.");
+            return true;
+          },
+          items: function () {
+            var o = opts.filter(function (x) { return x.id === picked(); })[0];
+            var a = [{ t: "h2", x: "Logo Options" }];
+            if (o) {
+              a.push({ t: "q", x: "Selected logo" }, { t: "a", x: o.label || "Option" });
+              if (o.image_url) a.push({ t: "img", x: o.image_url });
+              if (o.rationale) a.push({ t: "q", x: "Rationale" }, { t: "a", x: o.rationale });
+              if (o.keywords) a.push({ t: "q", x: "Keywords" }, { t: "a", x: o.keywords });
+            }
+            a.push({ t: "q", x: "Add any thoughts, comments, or hesitations here." }, { t: "a", x: nw.querySelector("textarea").value.trim() });
+            return a;
+          }
+        };
       }
+      var logoTab = document.querySelector('[data-tab="logos"]');
+      if (logoTab) logoTab.classList.remove(HIDDEN);
     }
 
     if (forms.indexOf("workbook") > -1) {
@@ -718,8 +772,11 @@
       var f = F[id];
       populate(f, portal.answers);
       f.update();
-      if (f.quiet) return;
       var meta = portal.answers[metaKey(f)];
+      if (f.quiet) {
+        if (meta && meta.submittedAt) setStatus(f, "Sent " + fmt(meta.submittedAt) + ". You can still update your answers.");
+        return;
+      }
       if (meta && meta.submittedAt) setStatus(f, "Sent " + fmt(meta.submittedAt) + ". You can still update your answers.");
       else if (d.lastSaved) setStatus(f, "Last saved " + fmt(d.lastSaved));
     });
@@ -795,6 +852,7 @@
 
   function toMarkdown(items) {
     return items
+      .filter(function (i) { return i.t !== "img"; })
       .map(function (i) {
         if (i.t === "h2") return "## " + i.x;
         if (i.t === "h3" || i.t === "h4") return "### " + i.x;
@@ -804,7 +862,7 @@
       .join("\n\n");
   }
 
-  function pdfDoc(f) {
+  function pdfDoc(f, noImg) {
     var INK = "#142823";
     var css =
       "<style>" +
@@ -823,7 +881,7 @@
     h += '<p class="sub">' + (name ? esc(name) + "<br>" : "") + "Completed " +
       new Date().toLocaleDateString(undefined, { year: "numeric", month: "long", day: "numeric" }) + "</p>";
     var first = true;
-    var items = walk(f);
+    var items = itemsOf(f);
     var pending = null;
     function intro() {
       if (pending !== null) h += '<p class="intro">' + esc(pending) + "</p>";
@@ -838,6 +896,7 @@
       } else if (it.t === "h3") { intro(); h += "<h3>" + esc(it.x) + "</h3>"; }
       else if (it.t === "h4") { intro(); h += "<h4>" + esc(it.x) + "</h4>"; }
       else if (it.t === "q") { intro(); pending = it.x; }
+      else if (it.t === "img") { if (!noImg) h += '<img src="' + esc(it.x) + '" crossorigin="anonymous" style="width:260px;display:block;margin:8px 0 4px;border:2px solid ' + INK + ';border-radius:16px">'; }
       else {
         h += '<div class="qa">' + (pending !== null ? '<div class="q">' + esc(pending) + "</div>" : "") + '<div class="a">' + (esc(it.x) || "&nbsp;") + "</div></div>";
         pending = null;
@@ -873,7 +932,10 @@
   }
   function pdfBase64(f) {
     return loadPdfLib()
-      .then(function () { return window.html2pdf().set(pdfOptions("form.pdf", 0.85)).from(pdfDoc(f)).outputPdf("datauristring"); })
+      .then(function () {
+        var run = function (noImg) { return window.html2pdf().set(pdfOptions("form.pdf", 0.85)).from(pdfDoc(f, noImg)).outputPdf("datauristring"); };
+        return run(false).catch(function () { return run(true); });
+      })
       .then(function (uri) { return String(uri).split("base64,")[1] || ""; });
   }
 
