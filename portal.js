@@ -775,6 +775,7 @@
       }
       if (prev) prev = hubItem("requests", { title: "Design Requests", sub: "Submit" }, prev);
     }
+    if (forms.indexOf("workbook") < 0) brand.forEach(function (el) { el.classList.add(HIDDEN); });
     var wbItem = document.querySelector('.portal_hub-item[data-tab="workbook"]');
     if (wbItem) wbItem.classList.toggle(HIDDEN, forms.indexOf("workbook") < 0);
     var webItem = document.querySelector('[data-tab="website"]');
