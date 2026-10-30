@@ -109,7 +109,7 @@
       { q: [
         q("select", "web-domain", "Domain", { o: ["I own my domain and have access to it", "I own my domain but don't have access", "I have picked a domain, but not purchased it", "I want you to handle the domain for me"] }),
         q("url", "web-domain-link", "If you own a domain, please add the link here", { opt: 1 }),
-        q("text", "web-domain-provider", "If you own a domain, please name your provider", { opt: 1 })
+        q("text", "web-domain-provider", "If you own a domain, please list your provider", { opt: 1 })
       ] },
       { q: [q("long", "web-seats", "You get 3 user seats for editing the site. For each person you'd like to add, list their email below:", { opt: 1 })] }
     ] },
