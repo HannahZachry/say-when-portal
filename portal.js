@@ -756,9 +756,9 @@
       var rel = document.createElement("div");
       rel.className = HIDDEN;
       rel.setAttribute("data-panel", "requests");
-      rel.innerHTML = '<h2 class="portal_style-h1">Design Requests</h2>' + (rq.form_url
+      rel.innerHTML = '<h2 class="portal_style-h1">Design Requests</h2><div class="layout_app-content"><div class="layout_app-grid"><div class="layout_foundations-wrap">' + (rq.form_url
         ? '<iframe class="clickup-embed clickup-dynamic-height" src="' + esc(rq.form_url) + '" width="100%" height="900" style="border:0;background:transparent" title="Design request form"></iframe>'
-        : '<div class="portal_style-paragraph">The request form is coming soon.</div>');
+        : '<div class="portal_style-paragraph">The request form is coming soon.</div>') + "</div></div></div>";
       host.appendChild(rel);
       if (rq.drive_url) {
         var w9 = document.querySelector('[data-hub="w9"]') || document.querySelector('.portal_hub-item[href*="W9"]');
