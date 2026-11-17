@@ -441,7 +441,8 @@
       return { el: el, id: id, title: navItems[id] ? navItems[id].textContent.trim() : h ? h.textContent.trim() : id, steps: [].slice.call(el.querySelectorAll("[data-wb-step]")) };
     });
     var sections = f.sections;
-    var template = f.id === "workbook" ? document.querySelector(".step-nav") : null;
+    var withBack = root.querySelector(".step-nav [data-wb-back]");
+    var template = f.id === "workbook" ? (withBack ? withBack.closest(".step-nav") : document.querySelector(".step-nav")) : null;
 
     sections.forEach(function (s, si) {
       s.steps.forEach(function (step, ti) {
@@ -719,8 +720,8 @@
 
   /* ---------- brand style cards (Personality) ---------- */
   var STYLE_PER_PAGE = 6;
-  var HEART = '<svg viewBox="0 0 24 24" width="1.1em" height="1.1em" aria-hidden="true"><path fill="currentColor" d="M12 21s-7.5-4.6-9.6-9.2C1 8.6 3 5 6.6 5c2 0 3.4 1.1 4.2 2.4h2.4C14 6.1 15.4 5 17.4 5 21 5 23 8.6 21.6 11.8 19.5 16.4 12 21 12 21z"/></svg>';
-  var CROSS = '<svg viewBox="0 0 24 24" width="1.1em" height="1.1em" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" d="M6 6l12 12M18 6L6 18"/></svg>';
+  var HEART = '<svg viewBox="0 0 24 24" width="0.95em" height="0.95em" aria-hidden="true"><path fill="currentColor" d="M12 21s-7.5-4.6-9.6-9.2C1 8.6 3 5 6.6 5c2 0 3.4 1.1 4.2 2.4h2.4C14 6.1 15.4 5 17.4 5 21 5 23 8.6 21.6 11.8 19.5 16.4 12 21 12 21z"/></svg>';
+  var CROSS = '<svg viewBox="0 0 24 24" width="0.85em" height="0.85em" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" d="M6 6l12 12M18 6L6 18"/></svg>';
   function styleCards() {
     var first = document.querySelector("[data-style-step]");
     if (!first || first.hasAttribute("data-style-ready")) return;
@@ -730,8 +731,9 @@
     if (!list || !cards.length) return;
     var st = document.createElement("style");
     st.textContent =
-      ".style-card_actions{display:flex;gap:.5rem;margin-top:.5rem}" +
-      ".style-pick{display:inline-flex;align-items:center;justify-content:center;width:2.5rem;height:2.5rem;border-radius:999px;border:2px solid currentColor;cursor:pointer;position:relative;transition:background-color .15s,color .15s}" +
+      ".style-card_meta{display:flex;justify-content:space-between;align-items:center;gap:.75rem}" +
+      ".style-card_actions{display:flex;gap:.375rem;flex:none}" +
+      ".style-pick{display:inline-flex;align-items:center;justify-content:center;width:2rem;height:2rem;border-radius:999px;border:2px solid currentColor;cursor:pointer;position:relative;transition:background-color .15s,color .15s}" +
       ".style-pick input{position:absolute;opacity:0;width:1px;height:1px;pointer-events:none}" +
       ".style-pick:has(input:focus-visible){outline:2px solid var(--input-accent);outline-offset:2px}" +
       ".style-pick.is-love:has(input:checked){background:var(--_color-modes---bg-accent-3,#2d645f);border-color:var(--_color-modes---bg-accent-3,#2d645f);color:#fff}" +
@@ -757,7 +759,14 @@
       row.innerHTML =
         '<label class="style-pick is-love" title="Love it"><input type="radio" name="style-' + esc(slug) + '" value="love" aria-label="Love ' + esc(label) + '">' + HEART + "</label>" +
         '<label class="style-pick is-dislike" title="Not for me"><input type="radio" name="style-' + esc(slug) + '" value="dislike" aria-label="Dislike ' + esc(label) + '">' + CROSS + "</label>";
-      card.appendChild(row);
+      var meta = document.createElement("div");
+      meta.className = "style-card_meta";
+      var words = document.createElement("div");
+      if (name) words.appendChild(name);
+      if (era) words.appendChild(era);
+      meta.appendChild(words);
+      meta.appendChild(row);
+      card.appendChild(meta);
     });
 
     var wraps = cards.map(function (c) { return c.closest(".w-dyn-item") || c; });
