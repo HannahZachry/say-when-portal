@@ -795,7 +795,7 @@
       if (F[id].quiet) return;
       try { engine(F[id]); } catch (err) { console.error("Say When portal: form " + id, err); }
     });
-    var firstId = forms.indexOf("workbook") > -1 ? "workbook" : forms[0] || (d.requests ? "requests" : "");
+    var firstId = d.requests ? "requests" : forms.indexOf("workbook") > -1 ? "workbook" : forms[0] || "";
     if (firstId) route(firstId);
   }
 
