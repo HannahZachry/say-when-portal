@@ -642,6 +642,9 @@
     return item;
   }
 
+  function day(ms) {
+    return ms ? new Date(ms).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }) : "";
+  }
   function loadRequests(box) {
     callFunction("get-requests", { token: portal.token })
       .then(function (r) {
@@ -654,7 +657,7 @@
         box.innerHTML = tasks.map(function (t) {
           var c = /^#[0-9a-f]{3,8}$/i.test(t.color) ? t.color : "#87909e";
           return '<div style="display:flex;justify-content:space-between;align-items:center;gap:1rem;padding:0.75rem 0;border-bottom:1px solid rgba(0,0,0,0.1)">' +
-            '<div class="portal_style-paragraph">' + esc(t.name) + "</div>" +
+            '<div><div class="portal_style-paragraph">' + esc(t.name) + '</div><div class="portal_style-paragraph" style="font-size:0.8rem;opacity:0.7">Created ' + day(t.created) + (t.updated ? " · Updated " + day(t.updated) : "") + "</div></div>" +
             '<span class="portal_style-paragraph" style="flex:none;padding:0.2rem 0.65rem;border-radius:999px;background:' + c + ';color:#fff;font-size:0.8rem;text-transform:uppercase;letter-spacing:0.04em;white-space:nowrap">' + esc(t.status) + "</span></div>";
         }).join("");
       })
