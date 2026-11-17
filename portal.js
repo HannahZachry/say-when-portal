@@ -642,6 +642,27 @@
     return item;
   }
 
+  var ARROWS = {
+    "\u2197": "M7 17L17 7M9 7h8v8",
+    "\u2193": "M12 5v14M6 13l6 6 6-6",
+    "\u2192": "M5 12h14M13 6l6 6-6 6",
+    "\u203a": "M9 6l6 6-6 6",
+  };
+  function arrowSvg(d) {
+    return '<svg viewBox="0 0 24 24" width="0.9em" height="0.9em" fill="none" stroke="currentColor" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="vertical-align:-0.1em"><path d="' + d + '"/></svg>';
+  }
+  function swapArrows(root) {
+    if (!root) return;
+    var walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
+    var hits = [];
+    while (walker.nextNode()) if (/[\u2197\u2193\u2192]/.test(walker.currentNode.nodeValue)) hits.push(walker.currentNode);
+    hits.forEach(function (n) {
+      var span = document.createElement("span");
+      span.innerHTML = esc(n.nodeValue).replace(/[\u2197\u2193\u2192]/g, function (ch) { return arrowSvg(ARROWS[ch]); });
+      n.parentNode.replaceChild(span, n);
+    });
+  }
+
   function day(ms) {
     return ms ? new Date(ms).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }) : "";
   }
@@ -665,7 +686,7 @@
         if (!document.getElementById("rq-style")) {
           var st = document.createElement("style");
           st.id = "rq-style";
-          st.textContent = "[data-request-list] summary::-webkit-details-marker{display:none}.rq-chev{display:inline-block;width:1rem;font-size:1.25rem;line-height:1;transition:transform .2s}[data-request-list] details[open] .rq-chev{transform:rotate(90deg)}";
+          st.textContent = "[data-request-list] summary::-webkit-details-marker{display:none}.rq-chev{display:inline-flex;width:1rem;transition:transform .2s}[data-request-list] details[open] .rq-chev{transform:rotate(90deg)}";
           document.head.appendChild(st);
         }
         box.className = "";
@@ -678,7 +699,7 @@
           var fg = lum > 160 ? "#1a1a1a" : "#fff";
           var done = g.type === "closed" || g.type === "done";
           return '<details' + (done ? "" : " open") + ' style="margin-bottom:1.25rem">' +
-            '<summary style="cursor:pointer;display:flex;align-items:center;gap:0.5rem;padding:0.25rem 0;list-style:none"><span class="rq-chev" aria-hidden="true">›</span>' +
+            '<summary style="cursor:pointer;display:flex;align-items:center;gap:0.5rem;padding:0.25rem 0;list-style:none"><span class="rq-chev">' + arrowSvg(ARROWS["\u203a"]) + '</span>' +
             '<span class="portal_style-paragraph" style="padding:0.2rem 0.65rem;border-radius:999px;background:' + c + ';color:' + fg + ';font-size:0.8rem;text-transform:uppercase;letter-spacing:0.04em">' + esc(g.name) + "</span>" +
             '<span class="portal_style-paragraph" style="opacity:0.7">' + g.items.length + "</span></summary>" +
             g.items.map(function (t) {
@@ -861,6 +882,7 @@
       if (F[id].quiet) return;
       try { engine(F[id]); } catch (err) { console.error("Say When portal: form " + id, err); }
     });
+    swapArrows(document.querySelector("[data-portal-hub]"));
     var firstId = d.requests ? "requests" : forms.indexOf("workbook") > -1 ? "workbook" : forms[0] || "";
     if (firstId) route(firstId);
   }
