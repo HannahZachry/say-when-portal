@@ -716,8 +716,135 @@
       });
   }
 
+
+  /* ---------- brand style cards (Personality) ---------- */
+  var STYLE_PER_PAGE = 6;
+  var HEART = '<svg viewBox="0 0 24 24" width="1.1em" height="1.1em" aria-hidden="true"><path fill="currentColor" d="M12 21s-7.5-4.6-9.6-9.2C1 8.6 3 5 6.6 5c2 0 3.4 1.1 4.2 2.4h2.4C14 6.1 15.4 5 17.4 5 21 5 23 8.6 21.6 11.8 19.5 16.4 12 21 12 21z"/></svg>';
+  var CROSS = '<svg viewBox="0 0 24 24" width="1.1em" height="1.1em" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" d="M6 6l12 12M18 6L6 18"/></svg>';
+  function styleCards() {
+    var first = document.querySelector("[data-style-step]");
+    if (!first || first.hasAttribute("data-style-ready")) return;
+    first.setAttribute("data-style-ready", "");
+    var list = first.querySelector(".w-dyn-items") || first.querySelector(".style-card_grid");
+    var cards = [].slice.call(first.querySelectorAll("[data-style-card]"));
+    if (!list || !cards.length) return;
+    var st = document.createElement("style");
+    st.textContent =
+      ".style-card_actions{display:flex;gap:.5rem;margin-top:.5rem}" +
+      ".style-pick{display:inline-flex;align-items:center;justify-content:center;width:2.5rem;height:2.5rem;border-radius:999px;border:2px solid currentColor;cursor:pointer;position:relative;transition:background-color .15s,color .15s}" +
+      ".style-pick input{position:absolute;opacity:0;width:1px;height:1px;pointer-events:none}" +
+      ".style-pick:has(input:focus-visible){outline:2px solid var(--input-accent);outline-offset:2px}" +
+      ".style-pick.is-love:has(input:checked){background:var(--_color-modes---bg-accent-3,#2d645f);border-color:var(--_color-modes---bg-accent-3,#2d645f);color:#fff}" +
+      ".style-pick.is-dislike:has(input:checked){background:var(--_color-modes---text,#142823);border-color:var(--_color-modes---text,#142823);color:#fff}" +
+      "[data-style-card][data-pick=love]{border-color:var(--_color-modes---bg-accent-3,#2d645f);box-shadow:0 0 0 2px var(--_color-modes---bg-accent-3,#2d645f)}" +
+      "[data-style-card][data-pick=dislike] .style-card_images{opacity:.45;filter:grayscale(1)}" +
+      ".style-picks{display:flex;flex-wrap:wrap;gap:.75rem;margin:.75rem 0 1rem}" +
+      ".style-picks figure{margin:0;width:4.5rem;font-size:.75rem;line-height:1.2}" +
+      ".style-picks img{width:100%;aspect-ratio:5/7;object-fit:cover;border-radius:.25rem;display:block;margin-bottom:.25rem}" +
+      ".style-guard{position:absolute;opacity:0;width:1px;height:1px;pointer-events:none}";
+    document.head.appendChild(st);
+
+    cards.sort(function (a, b) { return (Number(a.getAttribute("data-order")) || 0) - (Number(b.getAttribute("data-order")) || 0); });
+    cards.forEach(function (card) {
+      var slug = card.getAttribute("data-style") || txt(card).toLowerCase().replace(/[^a-z0-9]+/g, "-");
+      var name = card.querySelector(".portal_style-h4");
+      var era = card.querySelector(".portal_style-paragraph");
+      card.setAttribute("data-name", name ? txt(name) : slug);
+      card.setAttribute("data-era", era ? txt(era) : "");
+      var label = card.getAttribute("data-name");
+      var row = document.createElement("div");
+      row.className = "style-card_actions";
+      row.innerHTML =
+        '<label class="style-pick is-love" title="Love it"><input type="radio" name="style-' + esc(slug) + '" value="love" aria-label="Love ' + esc(label) + '">' + HEART + "</label>" +
+        '<label class="style-pick is-dislike" title="Not for me"><input type="radio" name="style-' + esc(slug) + '" value="dislike" aria-label="Dislike ' + esc(label) + '">' + CROSS + "</label>";
+      card.appendChild(row);
+    });
+
+    var wraps = cards.map(function (c) { return c.closest(".w-dyn-item") || c; });
+    var pages = [first];
+    var prev = first;
+    for (var i = STYLE_PER_PAGE; i < wraps.length; i += STYLE_PER_PAGE) {
+      var clone = first.cloneNode(false);
+      clone.removeAttribute("data-style-ready");
+      clone.innerHTML = first.innerHTML;
+      var intro = clone.querySelector("[data-style-intro]");
+      if (intro) intro.remove();
+      var cl = clone.querySelector(".w-dyn-items") || clone.querySelector(".style-card_grid");
+      cl.innerHTML = "";
+      prev.parentNode.insertBefore(clone, prev.nextSibling);
+      pages.push(clone);
+      prev = clone;
+    }
+    list.innerHTML = "";
+    pages.forEach(function (pg, n) {
+      var target = n === 0 ? list : pg.querySelector(".w-dyn-items") || pg.querySelector(".style-card_grid");
+      wraps.slice(n * STYLE_PER_PAGE, (n + 1) * STYLE_PER_PAGE).forEach(function (w) { target.appendChild(w); });
+      var cnt = document.createElement("div");
+      cnt.className = "portal_style-paragraph";
+      cnt.setAttribute("data-style-count", "");
+      cnt.style.marginTop = "1rem";
+      target.parentNode.appendChild(cnt);
+    });
+    var guard = document.createElement("input");
+    guard.type = "text";
+    guard.className = "style-guard";
+    guard.tabIndex = -1;
+    guard.setAttribute("aria-hidden", "true");
+    pages[pages.length - 1].querySelector("[data-style-count]").after(guard);
+
+    var root = first.parentNode;
+    var wasChecked = null;
+    root.addEventListener("pointerdown", function (e) {
+      var r = e.target.closest && e.target.closest(".style-pick");
+      var inp = r && r.querySelector("input");
+      wasChecked = inp && inp.checked ? inp : null;
+    }, true);
+    root.addEventListener("click", function (e) {
+      var r = e.target.closest && e.target.closest(".style-pick");
+      var inp = r && r.querySelector("input");
+      if (inp && inp === wasChecked) {
+        setTimeout(function () { inp.checked = false; inp.dispatchEvent(new Event("change", { bubbles: true })); }, 0);
+      }
+      wasChecked = null;
+    }, true);
+
+    function refresh() {
+      var picked = { love: [], dislike: [] };
+      cards.forEach(function (card) {
+        var on = card.querySelector("input:checked");
+        var v = on ? on.value : "";
+        if (v) card.setAttribute("data-pick", v); else card.removeAttribute("data-pick");
+        if (v) picked[v].push(card);
+      });
+      var line = "♥ " + picked.love.length + " loved · ✕ " + picked.dislike.length + " disliked";
+      root.querySelectorAll("[data-style-count]").forEach(function (el) { el.textContent = line; });
+      guard.setCustomValidity(picked.love.length && picked.dislike.length ? "" : "Mark at least one style you love (♥) and one you dislike (✕) to continue.");
+      root.querySelectorAll("[data-style-picks]").forEach(function (box) {
+        var set = picked[box.getAttribute("data-style-picks")] || [];
+        box.className = "style-picks";
+        box.innerHTML = set.length
+          ? set.map(function (c) {
+              var img = c.querySelector("img");
+              return "<figure>" + (img ? '<img src="' + esc(img.currentSrc || img.src) + '" alt="">' : "") + "<figcaption>" + esc(c.getAttribute("data-name")) + "</figcaption></figure>";
+            }).join("")
+          : "<figure style=\"width:auto\"><figcaption>None marked yet. Go back to mark at least one.</figcaption></figure>";
+      });
+    }
+    root.addEventListener("change", function (e) { if (e.target.closest && e.target.closest("[data-style-card]")) refresh(); });
+    refresh();
+    styleCards.picks = function () {
+      var out = { love: [], dislike: [] };
+      cards.forEach(function (c) {
+        var on = c.querySelector("input:checked");
+        if (on) out[on.value].push(c.getAttribute("data-name") + (c.getAttribute("data-era") ? " (" + c.getAttribute("data-era") + ")" : ""));
+      });
+      return out;
+    };
+  }
+
   function setup(d) {
     built = true;
+    styleCards();
     var w9Link = document.querySelector('[data-hub="w9"]');
     if (w9Link && portal.state === "app") w9Link.classList.remove(HIDDEN);
     var forms = d.forms || (d.workbook ? ["workbook"] : []);
@@ -936,7 +1063,17 @@
         if (chosen) out.push({ t: "a", x: chosen.join(", ") });
         chosen = null;
       }
-      sec.querySelectorAll(".portal_style-h3, .portal_style-h4, .form_label, .portal_style-paragraph, .scale-row, input, textarea, select").forEach(function (el) {
+      sec.querySelectorAll(".portal_style-h3, .portal_style-h4, .form_label, .portal_style-paragraph, .scale-row, [data-style-picks], input, textarea, select").forEach(function (el) {
+        if (el.closest("[data-style-step]")) return;
+        if (el.hasAttribute("data-style-picks")) {
+          flush();
+          var pk = styleCards.picks ? styleCards.picks() : { love: [], dislike: [] };
+          var which = el.getAttribute("data-style-picks");
+          out.push({ t: "q", x: which === "love" ? "Styles marked \u2665" : "Styles marked \u2715" });
+          out.push({ t: "a", x: (pk[which] || []).join(", ") });
+          return;
+        }
+        if (el.closest("[data-style-picks]")) return;
         if (el.matches("input, textarea, select")) {
           if (el.closest(".scale-row")) return;
           var type = (el.type || "").toLowerCase();
