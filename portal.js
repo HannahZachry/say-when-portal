@@ -669,7 +669,8 @@
           document.head.appendChild(st);
         }
         box.className = "";
-        box.innerHTML = order.map(function (k) {
+        var th = 'class="portal_style-paragraph" style="font-size:0.75rem;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;opacity:0.7"';
+        box.innerHTML = '<div style="display:flex;justify-content:space-between;gap:1rem;padding:0 0 0.5rem;margin-bottom:0.75rem;border-bottom:2px solid currentColor"><div ' + th + ">Task Name</div><div " + th + ">Date Created</div></div>" + order.map(function (k) {
           var g = groups[k];
           var c = /^#[0-9a-f]{3,8}$/i.test(g.color) ? g.color : "#87909e";
           var hx = c.length === 4 ? c.replace(/([0-9a-f])/gi, "$1$1").slice(1) : c.slice(1, 7);
