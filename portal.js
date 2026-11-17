@@ -653,12 +653,36 @@
           box.textContent = r && r.configured === false ? "Your requests will appear here soon." : "No requests yet. Submit one from Make a Request.";
           return;
         }
+        var groups = {};
+        var order = [];
+        tasks.forEach(function (t) {
+          var k = t.status.toLowerCase();
+          if (!groups[k]) { groups[k] = { name: t.status, color: t.color, type: t.type, order: t.order, items: [] }; order.push(k); }
+          groups[k].items.push(t);
+        });
+        var rank = function (g) { return (g.type === "closed" || g.type === "done" ? 1000 : 0) + g.order; };
+        order.sort(function (a, b) { return rank(groups[a]) - rank(groups[b]); });
+        if (!document.getElementById("rq-style")) {
+          var st = document.createElement("style");
+          st.id = "rq-style";
+          st.textContent = "[data-request-list] summary::-webkit-details-marker{display:none}.rq-chev{display:inline-block;width:1rem;font-size:1.25rem;line-height:1;transition:transform .2s}[data-request-list] details[open] .rq-chev{transform:rotate(90deg)}";
+          document.head.appendChild(st);
+        }
         box.className = "";
-        box.innerHTML = tasks.map(function (t) {
-          var c = /^#[0-9a-f]{3,8}$/i.test(t.color) ? t.color : "#87909e";
-          return '<div style="display:flex;justify-content:space-between;align-items:center;gap:1rem;padding:0.75rem 0;border-bottom:1px solid rgba(0,0,0,0.1)">' +
-            '<div><div class="portal_style-paragraph">' + esc(t.name) + '</div><div class="portal_style-paragraph" style="font-size:0.8rem;opacity:0.7">Created ' + day(t.created) + (t.updated ? " · Updated " + day(t.updated) : "") + "</div></div>" +
-            '<span class="portal_style-paragraph" style="flex:none;padding:0.2rem 0.65rem;border-radius:999px;background:' + c + ';color:#fff;font-size:0.8rem;text-transform:uppercase;letter-spacing:0.04em;white-space:nowrap">' + esc(t.status) + "</span></div>";
+        box.innerHTML = order.map(function (k) {
+          var g = groups[k];
+          var c = /^#[0-9a-f]{3,8}$/i.test(g.color) ? g.color : "#87909e";
+          var done = g.type === "closed" || g.type === "done";
+          return '<details' + (done ? "" : " open") + ' style="margin-bottom:1.25rem">' +
+            '<summary style="cursor:pointer;display:flex;align-items:center;gap:0.5rem;padding:0.25rem 0;list-style:none"><span class="rq-chev" aria-hidden="true">›</span>' +
+            '<span class="portal_style-paragraph" style="padding:0.2rem 0.65rem;border-radius:999px;background:' + c + ';color:#fff;font-size:0.8rem;text-transform:uppercase;letter-spacing:0.04em">' + esc(g.name) + "</span>" +
+            '<span class="portal_style-paragraph" style="opacity:0.7">' + g.items.length + "</span></summary>" +
+            g.items.map(function (t) {
+              return '<div style="display:flex;justify-content:space-between;align-items:baseline;gap:1rem;padding:0.75rem 0;border-bottom:1px solid rgba(0,0,0,0.1)">' +
+                '<div class="portal_style-paragraph">' + esc(t.name) + "</div>" +
+                '<div class="portal_style-paragraph" style="flex:none;font-size:0.8rem;opacity:0.7;white-space:nowrap">' + day(t.created) + "</div></div>";
+            }).join("") +
+            "</details>";
         }).join("");
       })
       .catch(function (err) {
