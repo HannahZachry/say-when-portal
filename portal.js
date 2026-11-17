@@ -756,20 +756,25 @@
       var rel = document.createElement("div");
       rel.className = HIDDEN;
       rel.setAttribute("data-panel", "requests");
-      var sec = function (h, body) { return '<div class="data-section"><div class="data-section-header"><h2 class="portal_style-h2">' + h + '</h2></div><div class="data-section-content">' + body + "</div></div>"; };
-      rel.innerHTML = '<h2 class="portal_style-h1">Design Requests</h2><div class="layout_app-content"><div class="layout_app-grid"><div class="layout_foundations-wrap">' +
-        (rq.plan
-          ? sec("Your Plan", '<div class="portal_style-paragraph"><strong>' + esc(rq.plan) + "</strong>" + (rq.since ? " · Subscribed " + esc(fmt(rq.since)) : "") + '</div><div class="portal_style-paragraph">Submit one request at a time. Each takes 3 to 8 business days to produce. Your plan covers the full period you\'ve paid for, even if you cancel.</div>' + SPACER + '<a class="button w-button" href="https://billing.stripe.com/p/login/28E8wO0UG9ml9UF9045kk00" target="_blank" rel="noopener">Manage subscription</a>') + SPACER
-          : "") +
-        sec("Submit a Request", rq.form_url
-          ? '<iframe class="clickup-embed clickup-dynamic-height" src="' + esc(rq.form_url) + '" width="100%" height="900" style="border:0;background:transparent" title="Design request form"></iframe>'
-          : '<div class="portal_style-paragraph">The request form is coming soon.</div>') +
-        SPACER +
-        sec("Shared Drive", rq.drive_url
-          ? '<div class="portal_style-paragraph">Everything we deliver lives in your shared drive.</div>' + SPACER + '<a class="button w-button" href="' + esc(rq.drive_url) + '" target="_blank" rel="noopener">Open shared drive</a>'
-          : '<div class="portal_style-paragraph">Your shared drive will be linked here once your first request is delivered.</div>') +
-        "</div></div></div>";
+      rel.innerHTML = rq.form_url
+        ? '<iframe class="clickup-embed clickup-dynamic-height" src="' + esc(rq.form_url) + '" width="100%" height="900" style="border:0;background:transparent" title="Design request form"></iframe>'
+        : '<div class="portal_style-paragraph">The request form is coming soon.</div>';
       host.appendChild(rel);
+      if (rq.drive_url) {
+        var w9 = document.querySelector('[data-hub="w9"]') || document.querySelector('.portal_hub-item[href*="W9"]');
+        if (w9) {
+          var dr = w9.cloneNode(true);
+          dr.removeAttribute("data-hub");
+          dr.href = rq.drive_url;
+          dr.target = "_blank";
+          dr.rel = "noopener";
+          var dt = dr.querySelector(".portal_style-nav-item");
+          var ds = dr.querySelector(".portal_style-paragraph");
+          if (dt) dt.textContent = "Shared Drive";
+          if (ds) ds.textContent = "Open ↗";
+          w9.parentNode.insertBefore(dr, w9);
+        }
+      }
       P.requests = [rel];
       if (rq.form_url) {
         var cs = document.createElement("script");
