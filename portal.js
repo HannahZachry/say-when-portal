@@ -739,6 +739,11 @@
       lh.className = "portal_style-h1 " + HIDDEN;
       lh.textContent = "Logo Options";
       host.insertBefore(lh, logo);
+      var ls = document.createElement("div");
+      ls.innerHTML = SPACER;
+      ls = ls.firstElementChild;
+      ls.classList.add(HIDDEN);
+      host.insertBefore(ls, logo);
       var lw = document.createElement("div");
       lw.className = "layout_app-content " + HIDDEN;
       lw.innerHTML = '<div class="layout_app-grid"><div class="layout_foundations-wrap"></div></div>';
@@ -746,8 +751,9 @@
       lw.querySelector(".layout_foundations-wrap").appendChild(logo);
       logo.classList.remove(HIDDEN);
       lh.setAttribute("data-panel", "logos");
+      ls.setAttribute("data-panel", "logos");
       lw.setAttribute("data-panel", "logos");
-      P.logos = [lh, lw];
+      P.logos = [lh, ls, lw];
       var lc = logo.querySelector(".data-section-content");
       var list = logo.querySelector("[data-logo-list]");
       var stEl = logo.querySelector("[data-logo-status]");
@@ -757,7 +763,7 @@
         var choiceP = Promise.resolve();
         var picked = function () { var r = list.querySelector("input:checked"); return r ? r.value : ""; };
         list.innerHTML = "";
-        list.style.cssText = "display:grid;grid-template-columns:repeat(auto-fill,minmax(min(400px,100%),400px));gap:4rem;align-items:start";
+        list.style.cssText = "display:grid;grid-template-columns:repeat(auto-fill,minmax(min(240px,100%),240px));gap:4rem;align-items:start;margin-top:2rem";
         opts.forEach(function (x, i) {
           var name = x.label || "Option " + (i + 1);
           var kw = String(x.keywords || "").split(",").map(function (k) { return k.trim(); }).filter(Boolean).slice(0, 3);
@@ -776,7 +782,7 @@
         nw.setAttribute("data-portal-form", "logos");
         nw.style.marginTop = "4rem";
         nw.innerHTML = '<div class="data-step-question"><div class="form_label">Add any thoughts, comments, or hesitations here.</div><textarea class="form_input is-text-area w-input" maxlength="5000" id="logo-notes" name="logo-notes" data-name="logo-notes" autocorrect="on" spellcheck="true"></textarea></div>' +
-          SPACER + '<div class="flex-horizontal-1rem"><a role="button" data-wb-finish href="#" class="button w-button">Submit</a><a role="button" data-logo-clear href="#" class="button is-secondary">Clear selection</a></div><div data-save-status class="portal_style-paragraph"></div>';
+          SPACER + '<div class="flex-horizontal-1rem" style="gap:0.5rem"><a role="button" data-wb-finish href="#" class="button w-button">Submit</a><a role="button" data-logo-clear href="#" class="button is-secondary">Clear selection</a></div><div data-save-status class="portal_style-paragraph"></div>';
         lc.appendChild(nw);
         nw.querySelector("[data-logo-clear]").addEventListener("click", function (e) {
           e.preventDefault();
