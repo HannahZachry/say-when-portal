@@ -672,10 +672,13 @@
         box.innerHTML = order.map(function (k) {
           var g = groups[k];
           var c = /^#[0-9a-f]{3,8}$/i.test(g.color) ? g.color : "#87909e";
+          var hx = c.length === 4 ? c.replace(/([0-9a-f])/gi, "$1$1").slice(1) : c.slice(1, 7);
+          var lum = (parseInt(hx.slice(0, 2), 16) * 299 + parseInt(hx.slice(2, 4), 16) * 587 + parseInt(hx.slice(4, 6), 16) * 114) / 1000;
+          var fg = lum > 160 ? "#1a1a1a" : "#fff";
           var done = g.type === "closed" || g.type === "done";
           return '<details' + (done ? "" : " open") + ' style="margin-bottom:1.25rem">' +
             '<summary style="cursor:pointer;display:flex;align-items:center;gap:0.5rem;padding:0.25rem 0;list-style:none"><span class="rq-chev" aria-hidden="true">›</span>' +
-            '<span class="portal_style-paragraph" style="padding:0.2rem 0.65rem;border-radius:999px;background:' + c + ';color:#fff;font-size:0.8rem;text-transform:uppercase;letter-spacing:0.04em">' + esc(g.name) + "</span>" +
+            '<span class="portal_style-paragraph" style="padding:0.2rem 0.65rem;border-radius:999px;background:' + c + ';color:' + fg + ';font-size:0.8rem;text-transform:uppercase;letter-spacing:0.04em">' + esc(g.name) + "</span>" +
             '<span class="portal_style-paragraph" style="opacity:0.7">' + g.items.length + "</span></summary>" +
             g.items.map(function (t) {
               return '<div style="display:flex;justify-content:space-between;align-items:baseline;gap:1rem;padding:0.75rem 0;border-bottom:1px solid rgba(0,0,0,0.1)">' +
