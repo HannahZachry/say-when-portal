@@ -718,6 +718,8 @@
 
   function setup(d) {
     built = true;
+    var w9Link = document.querySelector('[data-hub="w9"]');
+    if (w9Link && portal.state === "app") w9Link.classList.remove(HIDDEN);
     var forms = d.forms || (d.workbook ? ["workbook"] : []);
     var brand = [].slice.call(document.querySelectorAll('[data-panel="workbook"]'));
     if (!brand.length) {
