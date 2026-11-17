@@ -642,6 +642,28 @@
     return item;
   }
 
+  function loadRequests(box) {
+    callFunction("get-requests", { token: portal.token })
+      .then(function (r) {
+        var tasks = (r && r.tasks) || [];
+        if (!tasks.length) {
+          box.textContent = r && r.configured === false ? "Your requests will appear here soon." : "No requests yet. Submit one from Make a Request.";
+          return;
+        }
+        box.className = "";
+        box.innerHTML = tasks.map(function (t) {
+          var c = /^#[0-9a-f]{3,8}$/i.test(t.color) ? t.color : "#87909e";
+          return '<div style="display:flex;justify-content:space-between;align-items:center;gap:1rem;padding:0.75rem 0;border-bottom:1px solid rgba(0,0,0,0.1)">' +
+            '<div class="portal_style-paragraph">' + esc(t.name) + "</div>" +
+            '<span class="portal_style-paragraph" style="flex:none;padding:0.2rem 0.65rem;border-radius:999px;background:' + c + ';color:#fff;font-size:0.8rem;text-transform:uppercase;letter-spacing:0.04em;white-space:nowrap">' + esc(t.status) + "</span></div>";
+        }).join("");
+      })
+      .catch(function (err) {
+        console.error("Say When portal: requests", err);
+        box.textContent = "Couldn't load your requests. Please refresh to try again.";
+      });
+  }
+
   function setup(d) {
     built = true;
     var forms = d.forms || (d.workbook ? ["workbook"] : []);
@@ -756,7 +778,7 @@
       var rel = document.createElement("div");
       rel.className = HIDDEN;
       rel.setAttribute("data-panel", "requests");
-      rel.innerHTML = '<h2 class="portal_style-h1">Design Requests</h2>' + SPACER + '<div class="layout_app-content" style="max-width:44rem"><div class="layout_app-grid"><div class="layout_foundations-wrap" style="background-color:#fff">' + (rq.form_url
+      rel.innerHTML = '<h2 class="portal_style-h1">Make a Request</h2>' + SPACER + '<div class="layout_app-content" style="max-width:44rem"><div class="layout_app-grid"><div class="layout_foundations-wrap" style="background-color:#fff">' + (rq.form_url
         ? '<iframe class="clickup-embed clickup-dynamic-height" src="' + esc(rq.form_url) + '" width="100%" height="900" style="border:0;background:transparent" title="Design request form"></iframe>'
         : '<div class="portal_style-paragraph">The request form is coming soon.</div>') + "</div></div></div>";
       host.appendChild(rel);
@@ -781,9 +803,19 @@
         cs.src = "https://app-cdn.clickup.com/assets/js/forms-embed/v1.js";
         document.body.appendChild(cs);
       }
+      var all = document.createElement("div");
+      all.className = HIDDEN;
+      all.setAttribute("data-panel", "all-requests");
+      all.innerHTML = '<h2 class="portal_style-h1">All Requests</h2>' + SPACER + '<div class="layout_app-content" style="max-width:44rem"><div class="layout_app-grid"><div class="layout_foundations-wrap" style="background-color:#fff"><div data-request-list class="portal_style-paragraph">Loading your requests…</div></div></div></div>';
+      host.appendChild(all);
+      P["all-requests"] = [all];
+      loadRequests(all.querySelector("[data-request-list]"));
       if (prev) {
-        var rqItem = hubItem("requests", { title: "Design Requests", sub: "Submit" }, prev);
-        if (rqItem !== prev) rqItem.parentNode.insertBefore(rqItem, rqItem.parentNode.firstElementChild);
+        var rqItem = hubItem("requests", { title: "Make a Request", sub: "Submit" }, prev);
+        if (rqItem !== prev) {
+          rqItem.parentNode.insertBefore(rqItem, rqItem.parentNode.firstElementChild);
+          hubItem("all-requests", { title: "All Requests", sub: "View" }, rqItem);
+        }
       }
     }
     if (forms.indexOf("workbook") < 0) brand.forEach(function (el) { el.classList.add(HIDDEN); });
