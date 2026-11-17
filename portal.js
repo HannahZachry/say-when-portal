@@ -781,7 +781,10 @@
         cs.src = "https://app-cdn.clickup.com/assets/js/forms-embed/v1.js";
         document.body.appendChild(cs);
       }
-      if (prev) prev = hubItem("requests", { title: "Design Requests", sub: "Submit" }, prev);
+      if (prev) {
+        var rqItem = hubItem("requests", { title: "Design Requests", sub: "Submit" }, prev);
+        if (rqItem !== prev) rqItem.parentNode.insertBefore(rqItem, rqItem.parentNode.firstElementChild);
+      }
     }
     if (forms.indexOf("workbook") < 0) brand.forEach(function (el) { el.classList.add(HIDDEN); });
     var wbItem = document.querySelector('.portal_hub-item[data-tab="workbook"]');
