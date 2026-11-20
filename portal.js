@@ -433,6 +433,13 @@
 
   function engine(f) {
     var root = f.root;
+    root.querySelectorAll("select").forEach(function (sel) {
+      if ([].some.call(sel.options, function (o) { return o.value === ""; })) return;
+      var ph = new Option("Select one", "");
+      ph.disabled = true;
+      sel.insertBefore(ph, sel.firstChild);
+      sel.selectedIndex = 0;
+    });
     var navItems = {};
     root.querySelectorAll("[data-nav]").forEach(function (n) { navItems[n.getAttribute("data-nav")] = n; });
     f.sections = [].slice.call(root.querySelectorAll("[data-section]")).map(function (el) {
@@ -1073,7 +1080,7 @@
         chosen = null;
       }
       sec.querySelectorAll(".portal_style-h3, .portal_style-h4, .form_label, .portal_style-paragraph, .scale-row, [data-style-picks], input, textarea, select").forEach(function (el) {
-        if (el.closest("[data-style-step]")) return;
+        if (el.closest('[data-style-step], [data-wb-step="cover"]')) return;
         if (el.hasAttribute("data-style-picks")) {
           flush();
           var pk = styleCards.picks ? styleCards.picks() : { love: [], dislike: [] };
